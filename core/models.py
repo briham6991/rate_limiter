@@ -8,9 +8,9 @@ from django.contrib.auth.models import AbstractUser
 
 class CustomUser(AbstractUser):
     user_id = models.BigAutoField(primary_key=True)
-    password = models.CharField(max_length=128) # In production, use Django's built-in User model for better security
     phone_number = models.CharField(max_length=10, unique=True)
     role = models.SmallIntegerField(db_comment="(1=superadmin, 2=admin, 3=readonly)")
+    created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     employee_id = models.CharField(max_length=50, unique=True, null=True, blank=True)
 
@@ -43,6 +43,7 @@ class CompanyInformation(models.Model):
     email_id = models.EmailField(unique=True) # check for argumrnt to put in EmailValidator
     contact_number = models.CharField(max_length=15, unique=True)
     address = models.TextField()
+    join_date = models.DateTimeField(null=True, blank=True)
     is_company_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -73,8 +74,8 @@ class KeyInformation(models.Model):
 class KeyUtilizationInfo(models.Model):
     key_info_id = models.BigAutoField(primary_key=True)
     key_id = models.ForeignKey(KeyInformation, on_delete=models.PROTECT) #NOTE: Read about project than decide
-    request_datetime = models.DateTimeField()
-    endpoint = models.CharField()
+    request_datetime = models.DateTimeField(auto_now_add=True)
+    endpoint = models.CharField(max_length=255)
     ip_address = models.GenericIPAddressField()
     response_status = models.SmallIntegerField(db_comment="(1=success, 2=failure, 3=pending)")
     response_time_ms = models.BigIntegerField()
