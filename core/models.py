@@ -10,6 +10,10 @@ class CustomUser(AbstractUser):
     updated_at = models.DateTimeField(auto_now=True)
     employee_id = models.CharField(max_length=50, unique=True, null=True, blank=True)
 
+    def __str__(self):
+        return self.username
+  
+
     class Meta:
         db_table = 'custom_user'
         verbose_name = 'Custom User'    
@@ -28,6 +32,9 @@ class PlanInformation(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    def __str__(self):
+        return f"{self.plan_name} - {self.plan_price} INR"
+
     class Meta:
         db_table = 'plan_information'
         verbose_name = 'Plan Information'
@@ -44,6 +51,9 @@ class CompanyInformation(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    def __str__(self):
+        return self.company_name
+
     class Meta:
         db_table = 'company_information'
         verbose_name = 'Company Information'
@@ -52,8 +62,8 @@ class CompanyInformation(models.Model):
 class KeyInformation(models.Model):
     key_id = models.BigAutoField(primary_key=True)
     key_value = models.CharField(max_length=64, unique=True) #TODO: generate this key value using some secure method
-    company = models.ForeignKey(CompanyInformation, on_delete=models.PROTECT) #This ensures no two companies can have same keys
-    plan = models.ForeignKey(PlanInformation, on_delete=models.PROTECT) 
+    company_id = models.ForeignKey(CompanyInformation, on_delete=models.PROTECT, db_column="company_id") #This ensures no two companies can have same keys
+    plan_id = models.ForeignKey(PlanInformation, on_delete=models.PROTECT, db_column="plan_id") # This ensures that key is associated with a particular plan and we can easily get the rate limits and other details of the plan using this foreign key
     activation_time = models.DateTimeField(db_comment="provided by the issuer")
     valid_till = models.DateTimeField()
     created_by = models.ForeignKey(CustomUser, on_delete=models.PROTECT, db_column="created_by") #TODO:make this. this part is important
@@ -62,6 +72,9 @@ class KeyInformation(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    def __str__(self):
+        return self.key_value
+
     class Meta:
         db_table = 'key_information'
         verbose_name = 'Key Information'
@@ -69,7 +82,7 @@ class KeyInformation(models.Model):
 
 class KeyUtilizationInfo(models.Model):
     key_info_id = models.BigAutoField(primary_key=True)
-    key = models.ForeignKey(KeyInformation, on_delete=models.PROTECT) #NOTE: Read about project than decide
+    key_id = models.ForeignKey(KeyInformation, on_delete=models.PROTECT, db_column="key_id") #NOTE: Read about project than decide
     request_datetime = models.DateTimeField(auto_now_add=True)
     endpoint = models.CharField(max_length=255)
     ip_address = models.GenericIPAddressField()

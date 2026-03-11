@@ -17,7 +17,7 @@ class KeyGenerator:
             raise KeyGenerationError(message=f"key length: {self.__key_length} not as per recommended limit")
         self.__key = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(self.__key_length))
 
-        hashed_key = self.get_hashed_key()
+        hashed_key = self.__get_hashed_key()
         return (self.__key, hashed_key) # returning actual key and hashed key together
 
 
