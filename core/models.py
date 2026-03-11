@@ -52,11 +52,11 @@ class CompanyInformation(models.Model):
 class KeyInformation(models.Model):
     key_id = models.BigAutoField(primary_key=True)
     key_value = models.CharField(max_length=64, unique=True) #TODO: generate this key value using some secure method
-    company_id = models.ForeignKey(CompanyInformation, on_delete=models.PROTECT) #This ensures no two companies can have same keys
-    plan_id = models.ForeignKey(PlanInformation, on_delete=models.PROTECT) 
+    company = models.ForeignKey(CompanyInformation, on_delete=models.PROTECT) #This ensures no two companies can have same keys
+    plan = models.ForeignKey(PlanInformation, on_delete=models.PROTECT) 
     activation_time = models.DateTimeField(db_comment="provided by the issuer")
     valid_till = models.DateTimeField()
-    created_by = models.ForeignKey(CustomUser, on_delete=models.PROTECT) #TODO:make this. this part is important
+    created_by = models.ForeignKey(CustomUser, on_delete=models.PROTECT, db_column="created_by") #TODO:make this. this part is important
     last_used_at = models.DateTimeField(null=True)
     key_status = models.SmallIntegerField(default=2, db_comment="(1=active, 2=inactive, 3=paused)")
     created_at = models.DateTimeField(auto_now_add=True)
@@ -69,7 +69,7 @@ class KeyInformation(models.Model):
 
 class KeyUtilizationInfo(models.Model):
     key_info_id = models.BigAutoField(primary_key=True)
-    key_id = models.ForeignKey(KeyInformation, on_delete=models.PROTECT) #NOTE: Read about project than decide
+    key = models.ForeignKey(KeyInformation, on_delete=models.PROTECT) #NOTE: Read about project than decide
     request_datetime = models.DateTimeField(auto_now_add=True)
     endpoint = models.CharField(max_length=255)
     ip_address = models.GenericIPAddressField()
