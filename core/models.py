@@ -5,7 +5,7 @@ from django.contrib.auth.models import AbstractUser
 class CustomUser(AbstractUser):
     user_id = models.BigAutoField(primary_key=True)
     phone_number = models.CharField(max_length=10, unique=True)
-    role = models.SmallIntegerField(db_comment="(1=superadmin, 2=admin, 3=readonly)")
+    role = models.SmallIntegerField(default=2, db_comment="(1=superadmin, 2=admin, 3=readonly)")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     employee_id = models.CharField(max_length=50, unique=True, null=True, blank=True)
@@ -20,11 +20,11 @@ class PlanInformation(models.Model):
     plan_id = models.BigAutoField(primary_key=True)
     plan_name = models.CharField(max_length=100, unique=True)
     plan_price = models.DecimalField(max_digits=10, decimal_places=2, db_comment="In Rupees")
-    monthly_request_limit = models.BigIntegerField()
-    requests_per_minute = models.BigIntegerField()
-    requests_per_hour = models.BigIntegerField()
-    requests_per_day = models.BigIntegerField()
-    plan_status = models.SmallIntegerField(db_comment="(1=active, 2=inactive, 3=paused)")
+    monthly_request_limit = models.BigIntegerField(default=100000)
+    requests_per_minute = models.BigIntegerField(default=100)
+    requests_per_hour = models.BigIntegerField(default=1000)
+    requests_per_day = models.BigIntegerField(default=10000)
+    plan_status = models.SmallIntegerField(default=2, db_comment="(1=active, 2=inactive, 3=paused)")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -58,7 +58,7 @@ class KeyInformation(models.Model):
     valid_till = models.DateTimeField()
     created_by = models.ForeignKey(CustomUser, on_delete=models.PROTECT) #TODO:make this. this part is important
     last_used_at = models.DateTimeField(null=True)
-    key_status = models.SmallIntegerField(db_comment="(1=active, 2=inactive, 3=paused)")
+    key_status = models.SmallIntegerField(default=2, db_comment="(1=active, 2=inactive, 3=paused)")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
