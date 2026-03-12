@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -7,6 +8,8 @@ from rest_framework.permissions import IsAuthenticated
 from core.serializers import CreateAPIKeySerializer
 from core.services import KeyGenerator
 from core.exceptions import KeyGenerationError
+from core.models import KeyInformation
+
 
 
 
@@ -33,3 +36,23 @@ class CreateAPIKeyView(APIView):
             return Response({"actual_key":actual_key, "details":serializer.data}, status = status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+
+
+
+class DeleteAPIKeyView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, pk):
+        key = get_object_or_404(KeyInformation, key_id=pk)
+
+        if request.user.role != 1:  # not superadmin
+            #Used this instead of using Exist in here to understand this
+    
+            if key.company_id != request.user.company_id:
+                 return Response({"error": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
+            
+        key.key_status = 2
+        key.save()
+        return Response({"message":"key deleted successfully"}, status=status.HTTP_200_OK)
+
