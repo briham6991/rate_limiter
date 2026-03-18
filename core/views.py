@@ -9,6 +9,12 @@ from core.serializers import CreateAPIKeySerializer
 from core.services import KeyGenerator
 from core.exceptions import KeyGenerationError
 from core.models import KeyInformation
+from core.utils import get_user_role
+
+from datetime import datetime as dt, timezone
+
+
+
 
 
 
@@ -46,13 +52,39 @@ class DeleteAPIKeyView(APIView):
     def delete(self, request, pk):
         key = get_object_or_404(KeyInformation, key_id=pk)
 
-        if request.user.role != 1:  # not superadmin
-            #Used this instead of using Exist in here to understand this
-    
+        if request.user.role != 1:  # not superadmin 
             if key.company_id != request.user.company_id:
                  return Response({"error": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
             
         key.key_status = 2
         key.save()
         return Response({"message":"key deleted successfully"}, status=status.HTTP_200_OK)
+    
+
+class GetUserDetailsFromTokenView(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated] # If user was not authenticated i wouldnt have recieved this inside the view
+
+    def get(self, request):
+        data = {}
+        user = request.user
+        try:
+            data["user_id"] = user.user_id
+            data["username"] = user.username
+            data["role"] = get_user_role(user.role) # provide role in string rather than ineteger id
+        except Exception as e:
+            return Response({"Error": f"Error occured while fetching details from request.user:{e}"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            exp_epoch = request.auth.payload["exp"]
+            expiry = dt.fromtimestamp(exp_epoch, tz=timezone.utc) # considering UTC timezone only
+           
+        except Exception as e:
+            return Response({"error":f"Error occured while accessing expiry time {e}"}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            data["token_expiry_time"] = expiry
+        return Response(data, status=status.HTTP_200_OK)
+
+    
+
 
