@@ -6,17 +6,12 @@ from rest_framework import status
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 from core.serializers import CreateAPIKeySerializer
-from core.services import KeyGenerator
-from core.exceptions import KeyGenerationError
-from core.models import KeyInformation
+from core.services import KeyGenerator, RateLimitValidator
+from core.exceptions import KeyGenerationError, KeyValidationError, RateLimitError
+from core.models import KeyInformation, PlanInformation
 from core.utils import get_user_role
 
 from datetime import datetime as dt, timezone
-
-
-
-
-
 
 
 class CreateAPIKeyView(APIView):
@@ -61,6 +56,7 @@ class DeleteAPIKeyView(APIView):
         return Response({"message":"key deleted successfully"}, status=status.HTTP_200_OK)
     
 
+
 class GetUserDetailsFromTokenView(APIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated] # If user was not authenticated i wouldnt have recieved this inside the view
@@ -85,6 +81,29 @@ class GetUserDetailsFromTokenView(APIView):
             data["token_expiry_time"] = expiry
         return Response(data, status=status.HTTP_200_OK)
 
-    
+
+class RateLimitView(APIView):
+    authentication_classes = [JWTAuthentication,]
+    permission_classes = [IsAuthenticated,]
+
+    def post(self, request):
+        data = request.data.copy()
+        api_key_id = data.get("api_key_id")
+
+        key = get_object_or_404(KeyInformation, api_key_id) # does it raise error if object not found
+        plan = get_object_or_404(PlanInformation, key.plan_id)
+
+        ratelimit_validator = RateLimitValidator(key, plan)
+
+        try:
+            api_counters = ratelimit_validator.read_API_key()
+        except RateLimitError as e:
+            return Response({"Error":f"{e.__repr__()}"}, status=status.HTTP_429_TOO_MANY_REQUESTS)
+        except KeyValidationError as e:
+            return Response({"Error":f"{e.__repr__()}"}, status=status.HTTP_403_FORBIDDEN)
+        except Exception as e:
+            return Response({"Error":f"{e.__repr__}"})
+        else:
+            return Response({"api_counters": api_counters}, status=status.HTTP_200_OK)
 
 
